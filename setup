@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # install RPI temperature for Venus OS
+overlayFile="/u-boot/overlays/w1-gpio.dtbo"
+configFile="/u-boot/config.txt"
 #
 
 packageLogFile="/var/log/VenusOS-TemperatureService/current"
@@ -31,6 +33,18 @@ if [ $scriptAction == 'INSTALL' ] ; then
     logMessage "++ Installing VenusOS Temperature Service"
 
     installService $packageName
+	
+	# install DT overlay to for 1-Wire
+    updateActiveFile "$overlayFile"
+	
+	if [ $(grep -c "w1-gpio" "$configFile") == 0 ]; then
+        logMessage "activating 1-Wire overlay"
+        echo "#### Change 1-Wire Temperatursensor on Pin4"  >> "$configFile"
+		echo "dtoverlay=w1-gpio,gpiopin=4" >> "$configFile"
+		echo "#### end change 1-Wire Pin4" >> "$configFile"
+        filesUpdated=true
+    fi
+	
 fi
 
 #### uninstalling - check scriptAction again
@@ -39,7 +53,22 @@ if [ $scriptAction == 'UNINSTALL' ] ; then
     logMessage "++ Uninstalling VenusOS Temperature Service"
 
     removeService $packageName
+	
+	restoreActiveFile "$overlayFile"
+	
+	# remove mods from configFile - do not use restore in case other mods were made manually
+    if [ -f "$configFile" ]; then
+        if [ $(grep -c "#### Change 1-Wire Temperatursensor on Pin4" "$configFile") != 0 ]; then
+            sed -i -e '/#### Change 1-Wire Temperatursensor on Pin4/,/#### end change 1-Wire Pin4/d' "$configFile"
+            filesUpdated=true
+        fi
+    fi
 fi
+
+if $filesUpdated ; then
+    rebootNeeded=true
+fi
+
 
 # thats all folks - SCRIPT EXITS INSIDE THE FUNCTION
 endScript
