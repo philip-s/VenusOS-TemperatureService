@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# install RPI temperature for Venus OS
+#
+
+packageLogFile="/var/log/VenusOS-TemperatureService/current"
+
+#### following lines incorporate SetupHelper utilities into this script
+# Refer to the SetupHelper ReadMe file for details.
+    
+# CommonResources sets $okToProceed and $reinstall
+# among other varables and functions useful to this script
+
+source "/data/SetupHelper/CommonResources"
+
+#### end of lines to include SetupHelper
+
+
+#### running manually and OK to proceed - prompt for input
+if [ $scriptAction == 'NONE' ] ; then
+    # display innitial message
+    echo
+    echo "This package brings the RPI's processor internal temperature to the GUI and VRM"
+
+    standardActionPrompt
+fi
+
+#### install code goes here
+if [ $scriptAction == 'INSTALL' ] ; then
+
+    logMessage "++ Installing VenusOS Temperature Service"
+
+    installService $packageName
+fi
+
+#### uninstalling - check scriptAction again
+# if an install step failed package needs to be removed
+if [ $scriptAction == 'UNINSTALL' ] ; then
+    logMessage "++ Uninstalling VenusOS Temperature Service"
+
+    removeService $packageName
+fi
+
+# thats all folks - SCRIPT EXITS INSIDE THE FUNCTION
+endScript
