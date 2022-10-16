@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# install RPI temperature for Venus OS
+# install  TemperatureService for Victron Venus OS on Raspberry Pi
+
 overlayFile="/u-boot/overlays/w1-gpio.dtbo"
 configFile="/u-boot/config.txt"
+
 #
 
 packageLogFile="/var/log/VenusOS-TemperatureService/current"
