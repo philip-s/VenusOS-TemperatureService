@@ -1,5 +1,5 @@
-#Venus OS Temperature Service
-## Fork from LHardwick Victron-Service
+## Venus OS Temperature Service
+### Fork from LHardwick Victron-Service
 
 This is a service to publish temperature type data onto the DBus of VenusOs running on a Victron GX device.  
 Note: Currently this will not display the CPU temperature on Venus GX, only on RPi.
