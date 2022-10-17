@@ -17,8 +17,8 @@ No Settings needed for 1 Wire (e.g. DS18B20) all you need is to install SetupHel
   - 1-Wire Support (Temperatures)
 
 ### Can be activated but not tested (in dbus-i2c.py)
-  -i2c
-  -ADC
+  - i2c Sensors
+  - ADC Sensors
 
 Tested on Rasberry 3+ with Venus OS 2.91
 
