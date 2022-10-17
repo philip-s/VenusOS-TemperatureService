@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2021 LHardwick-git
+# Copyright (c) 2021 LHardwick-git Edit by Rikkert-RS
 # Licensed under the BSD 3-Clause license. See LICENSE file in the project root for full license information.
 #
 # takes data from the i2c and adc channels (which are not used by venus) and publishes the data on the bus.
 
 # If edditing then use 
-# svc -d /service/dbus-i2c and
-# svc -u /service/dbus-i2c
+# svc -d /service/VenusOS-TemperatureService and
+# svc -u /service/VenusOS-TemperatureService
 # to stop and restart the service 
 
 #--------------------- support python 2 and 3
@@ -49,7 +49,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/d
 from vedbus import VeDbusService, VeDbusItemExport, VeDbusItemImport 
 from settingsdevice import SettingsDevice  # available in the velib_python repository
 
-
+SCount = 0
 dbusservice = None
 
 def update():
@@ -60,10 +60,10 @@ def update():
 #
 # So the only service left running is the Raspberry pi CPU temperature.
 #
-#    update_i2c()
-#    update_adc()
     update_rpi()
     update_W1()
+#    update_i2c()
+#    update_adc()
     return True
 
 # update i2c interface values
@@ -154,26 +154,48 @@ def update_rpi():
 
 #update W1 temp
 def update_W1():
-    if not os.path.exists('/sys/bus/w1/devices'):
-        if dbusservice['W1-temp']['/Connected'] != 0:
-            logging.info("W1 temperature interface disconnected")
-            dbusservice['W1-temp']['/Connected'] = 0
-    else:
-        if dbusservice['W1-temp']['/Connected'] != 1:
-            logging.info("W1 temperature interface connected")
-            dbusservice['W1-temp']['/Connected'] = 1
-        # RS comment out for DS18B20
-        ### sensor = W1ThermSensor()
-        ### temperature_in_celsius = sensor.get_temperature()
-        ### value =  temperature_in_celsius
-        # RS end
-        # RS Added for DS18B20
-        fd  = open('/sys/bus/w1/devices/28-021318be96aa/hwmon/hwmon1/temp1_input','r')
-        value = float(fd.read())
-        value = round(value / 1000.0, 1)
-        # RS end
-        dbusservice['W1-temp']['/Temperature'] = value
-        fd.close
+#Check 1Wire Devices
+    fd = open('/sys/devices/w1_bus_master1/w1_master_slaves','r')
+    flines = fd.read().splitlines()
+    fd.close
+    
+    for x in flines:
+        logging.debug("1Wire Slave ID:" + x[0:2] + " Full DevicesID:" + x)
+        if x[0:2] != '00':
+            if ('W1-temp'+ x) not in dbusservice:
+                logging.info("1Wire Sensor found with no Service -> Create:")
+                # service defined by (base*, type*, connection*, logical, id*, instance, settings ID):
+                
+                dbusservice['W1-temp'+ x] = new_service(base,'temperature','Wire','1Wire',SCount+1,100+SCount,SCount+1)
+                dbusservice['W1-temp'+ x]['/ProductName'] = '1Wire Sensor'
+                initSettings(newSettings)
+                readSettings(settingObjects)
+                logging.info("Created Service 1Wire ID: " + str(SCount+1) + " Settings ID:" + str(SCount+1))
+            
+            if os.path.exists('/sys/devices/w1_bus_master1/'+ x +'/temperature'):
+                fd  = open('/sys/devices/w1_bus_master1/'+ x +'/temperature','r')
+                value = float(fd.read())
+                value = round(value / 1000.0, 1)
+                dbusservice['W1-temp'+ x]['/Temperature'] = value
+                fd.close
+            else:
+                dbusservice['W1-temp'+ x]['/Temperature'] = -1
+                #dbusservice['W1-temp'+ x]['/Status'] = 1 #Disconnet Status
+
+#Check 1 Wire Service and Set Connection
+    for item in dbusservice:
+        logging.debug("Search for 1Wire Service Current Service: " + item)
+        if dbusservice[item]['/Mgmt/Connection'] == '1Wire':
+            logging.debug("Found 1 Wire Service Check connection")
+            if not os.path.exists('/sys/devices/w1_bus_master1/'+ item[7:]):
+                if dbusservice[item]['/Connected'] != 0:
+                    logging.info(item + " temperature interface disconnected")
+                    dbusservice[item]['/Connected'] = 0
+            else:
+                if dbusservice[item]['/Connected'] != 1:
+                    logging.info(item + " temperature interface connected")
+                    dbusservice[item]['/Connected'] = 1
+    
 
 # =========================== Start of settings interface ================
 #  The settings interface handles the persistent storage of changes to settings
@@ -282,6 +304,7 @@ logging.info('Loglevel set to ' + logLevel[logging.getLogger().getEffectiveLevel
 DBusGMainLoop(set_as_default=True)
 
 def new_service(base, type, physical, logical, id, instance, settingId = False):
+    global SCount
     self =  VeDbusService("{}.{}.{}_id{:02d}".format(base, type, physical,  id), dbusconnection())
     # physical is the physical connection 
     # logical is the logical connection to allign with the numbering of the console display
@@ -322,7 +345,7 @@ def new_service(base, type, physical, logical, id, instance, settingId = False):
     if type == 'humidity':
         self.add_path('/Humidity', [])
         self.add_path('/Status', 0)
-
+    SCount += 1
     return self
 
 dbusservice = {} # Dictionary to hold the multiple services
@@ -333,19 +356,19 @@ base = 'com.victronenergy'
 # Init is called again later to set anything that does not exist
 # this gets round the Chicken and Egg bootstrap problem,
 
-# service defined by (base*, type*, connection*, logial, id*, instance, settings ID):
+# service defined by (base*, type*, connection*, logical, id*, instance, settings ID):
 # The setting iD is used with settingsDevice library to create a persistent setting
 # Items marked with a (*) are included in the service name
 #
 # I have commented out the bits that will make new services for i2C and ADC services here
 # If you want to re-enable these you need to uncomment the right lines
+# !!! Importand do NOT set an Dash in "connection" Parameter
 
 #dbusservice['i2c-temp']     = new_service(base, 'temperature', 'i2c',      'i2c Device 1',  0, 25, 7) 
 #dbusservice['i2c-humidity'] = new_service(base, 'humidity',    'i2c',      'i2c Device 1',  0, 25)
 # Tidy up custom or missing items
 #dbusservice['i2c-temp']    ['/ProductName']     = 'Encased i2c AM2315'
 #dbusservice['i2c-humidity']['/ProductName']     = 'Encased i2c AM2315'
-
 
 #dbusservice['adc-temp0']    = new_service(base, 'temperature', 'RPi_adc0', 'Temperature sensor input 3',  0, 26, 3)
 #dbusservice['adc-temp1']    = new_service(base, 'temperature', 'RPi_adc1', 'Temperature sensor input 4',  1, 27, 4)
@@ -355,13 +378,11 @@ base = 'com.victronenergy'
 #dbusservice['adc-temp1']   ['/ProductName']     = 'Custard Pi-3 8x12bit adc'
 #dbusservice['adc-temp7']   ['/ProductName']     = 'Custard Pi-3 8x12bit adc'
 
-#------ change name (can't have a - (dash))
-dbusservice['cpu-temp']     = new_service(base, 'temperature', 'Rpi_cpu',  'Raspberry Pi OS',  6, 29, 6)
-dbusservice['W1-temp']     = new_service(base, 'temperature', 'Wire',      '1Wire',  0, 28, 5)
-
+# Raspy CPU Temp
+dbusservice['cpu-temp'] = new_service(base, 'temperature', 'RPi_cpu', 'Raspberry Pi OS', SCount+1, 100, SCount+1)
 # Tidy up custom or missing items
-dbusservice['cpu-temp']   ['/ProductName']     = 'Raspberry Pi'
-dbusservice['W1-temp']   ['/ProductName']     = '1Wire Sensor'
+dbusservice['cpu-temp']['/ProductName'] = 'Raspberry Pi'
+
 # Persistent settings obejects in settingsDevice will not exist before this is executed
 initSettings(newSettings)
 # Do something to read the saved settings and apply them to the objects
