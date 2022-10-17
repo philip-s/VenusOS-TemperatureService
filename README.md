@@ -7,7 +7,7 @@ Note: Currently this will not display the CPU temperature on Venus GX, only on R
 Added Support to install this with Kevin Windrem's Venus OS Setup Helper (https://github.com/kwindrem/SetupHelper)
 
 ## INSTALL INSTRUCTIONS
-No Settings needed for 1 Wire (e.g. DS18B20) all you need ist to install SetupHelper and configure a custom Package
+No Settings needed for 1 Wire (e.g. DS18B20) all you need is to install SetupHelper and configure a custom Package
 Package name: VenusOS-TemperatureService
 GitHub user: Rikkert-RS
 GitHub Tag: latest
