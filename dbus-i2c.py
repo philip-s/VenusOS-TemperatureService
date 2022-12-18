@@ -383,7 +383,13 @@ base = 'com.victronenergy'
 # Raspy CPU Temp
 dbusservice['cpu-temp'] = new_service(base, 'temperature', 'RPi_cpu', 'Raspberry Pi OS', SCount+1, 100, SCount+1)
 # Tidy up custom or missing items
-dbusservice['cpu-temp']['/ProductName'] = 'Raspberry Pi'
+if os.path.exists('/sys/firmware/devicetree/base/model'):
+    with open('/sys/firmware/devicetree/base/model', 'r') as f:
+        value = str(f.readline().strip('\n'))
+        value = ''.join([c for c in value if c.isalnum() or c in [' ', '.']])
+        dbusservice['cpu-temp']['/ProductName'] = value
+else:
+    dbusservice['cpu-temp']['/ProductName'] = 'Raspberry Pi'
 
 # Persistent settings obejects in settingsDevice will not exist before this is executed
 initSettings(newSettings)
