@@ -167,7 +167,9 @@ def update_W1():
                 # service defined by (base*, type*, connection*, logical, id*, instance, settings ID):
                 
                 dbusservice['W1-temp'+ x] = new_service(base,'temperature','Wire','1Wire',SCount+1,100+SCount,SCount+1)
-                dbusservice['W1-temp'+ x]['/ProductName'] = '1Wire Sensor'
+                dbusservice['W1-temp'+ x]['/ProductName'] = '1Wire Sensor ' + x
+                dbusservice['W1-temp'+ x]['/HardwareVersion'] = x[3:]
+                dbusservice['W1-temp'+ x]['/FirmwareVersion'] = x[0:2]
                 initSettings(newSettings)
                 readSettings(settingObjects)
                 logging.info("Created Service 1Wire ID: " + str(SCount+1) + " Settings ID:" + str(SCount+1))
@@ -180,7 +182,7 @@ def update_W1():
                 fd.close
             else:
                 dbusservice['W1-temp'+ x]['/Temperature'] = -1
-                #dbusservice['W1-temp'+ x]['/Status'] = 1 #Disconnet Status
+                dbusservice['W1-temp'+ x]['/Connected'] = 0
 
 #Check 1 Wire Service and Set Connection
     for item in dbusservice:
