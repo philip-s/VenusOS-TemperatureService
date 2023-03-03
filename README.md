@@ -29,4 +29,4 @@ Tested on Rasberry 3+ with Venus OS 2.91
 
 Hope this all works for you 
 
-Rikker-RS
+Rikkert-RS
