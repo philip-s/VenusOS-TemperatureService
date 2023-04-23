@@ -12,9 +12,19 @@ No Settings needed for 1 Wire (e.g. DS18B20) all you need is to install SetupHel
   - GitHub user: Rikkert-RS
   - GitHub Tag: latest
 
+      ### Screenshots
+      <details><summary>Add Custom Package</summary>
+
+      ![PackageManager Menü](/screenshots/PackageManagerMenu.png)
+      ![Add Custom Package ](/screenshots/PackageManagerAddPackage.png)
+      ![Fill Custom Package](/screenshots/PackageManagerAddCustomPackage.png)
+      ![Install Package](/screenshots/PackageManagerInstallAktivPackage.png)
+
+</details>
+
 ### Enabled Features in this Setup:
   - Raspberry Pi CPU temperature
-  - 1-Wire Support (Temperatures) Data Port GPIO 4 on RPi
+  - 1-Wire Support (Temperatures) Data Port GPIO 26 on RPi
 
 ### Can be activated but not tested (in dbus-i2c.py)
   - i2c Sensors
@@ -27,6 +37,8 @@ Tested on Rasberry 3+ with Venus OS 2.91
  If you modify the service to pubish data as a path that is of a different type
  it will only be available via the DBus and will not appear on the console or VRM.
 
-Hope this all works for you 
+![Temps in Venus OS Menu](/screenshots/TempsInMenu.png)
+
+Hope this all works for you
 
 Rikkert-RS
