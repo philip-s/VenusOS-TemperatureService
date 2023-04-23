@@ -35,11 +35,6 @@ import argparse
 import logging
 import os
 from pprint import pprint
-#--------------------- was causing an error
-try:
-	from w1thermsensor import W1ThermSensor
-except:
-	pass
 #---------------------
 # Import i2c interface driver, this is a modified library stored in the same directory as this file
 from i2c import AM2320 as AM2320
@@ -154,49 +149,62 @@ def update_rpi():
 
 #update W1 temp
 def update_W1():
-#Check 1Wire Devices
+#check, create and update 1 Wire devices
+
+    #read list of slaves
     fd = open('/sys/devices/w1_bus_master1/w1_master_slaves','r')
-    flines = fd.read().splitlines()
+    w1Slaves = fd.read().splitlines()
     fd.close
     
-    for x in flines:
-        logging.debug("1Wire Slave ID:" + x[0:2] + " Full DevicesID:" + x)
-        if x[0:2] != '00':
-            if ('W1-temp'+ x) not in dbusservice:
+    #Loop through all connected 1Wire devices, create dbusService if necessary
+    for id in w1Slaves: 
+        familyID = id[0:2]
+        deviceID = id[3:]
+        logging.debug("1Wire Family ID:" + familyID + " Full DevicesID:" + id)
+        
+        #DS18B20 Temp Sensors
+        if familyID == '28':
+            if ('W1-temp:'+ id) not in dbusservice:
                 logging.info("1Wire Sensor found with no Service -> Create:")
-                # service defined by (base*, type*, connection*, logical, id*, instance, settings ID):
-                
-                dbusservice['W1-temp'+ x] = new_service(base,'temperature','Wire','1Wire',SCount+1,100+SCount,SCount+1)
-                dbusservice['W1-temp'+ x]['/ProductName'] = '1Wire Sensor ' + x
-                dbusservice['W1-temp'+ x]['/HardwareVersion'] = x[3:]
-                dbusservice['W1-temp'+ x]['/FirmwareVersion'] = x[0:2]
+                                
+                dbusservice['W1-temp:'+ id] = new_service(base, 'temperature', 'Wire', '1Wire', SCount+1, 100+SCount, deviceID)
+                dbusservice['W1-temp:'+ id]['/ProductName'] = '1Wire Sensor ' + id
+                dbusservice['W1-temp:'+ id]['/HardwareVersion'] = deviceID
+                dbusservice['W1-temp:'+ id]['/FirmwareVersion'] = familyID
                 initSettings(newSettings)
                 readSettings(settingObjects)
-                logging.info("Created Service 1Wire ID: " + str(SCount+1) + " Settings ID:" + str(SCount+1))
+                logging.info("Created Service 1Wire ID: " + str(SCount) + " Settings ID:" + str(SCount))
             
-            if os.path.exists('/sys/devices/w1_bus_master1/'+ x +'/temperature'):
-                fd  = open('/sys/devices/w1_bus_master1/'+ x +'/temperature','r')
-                value = float(fd.read())
-                value = round(value / 1000.0, 1)
-                dbusservice['W1-temp'+ x]['/Temperature'] = value
+            #read Temp value
+            value = None #invalidate value
+            if os.path.exists('/sys/devices/w1_bus_master1/'+ id +'/temperature'):
+                fd  = open('/sys/devices/w1_bus_master1/'+ id +'/temperature','r')
+                lines = fd.read().splitlines()
+                if lines: 
+                    logging.debug("RawValue ID" + id + ":" + lines[0])
+                    if lines[0].isnumeric():
+                        value = float(lines[0])
+                        value = round(value / 1000.0, 1)
                 fd.close
-            else:
-                dbusservice['W1-temp'+ x]['/Temperature'] = -1
-                dbusservice['W1-temp'+ x]['/Connected'] = 0
+                
+            dbusservice['W1-temp:'+ id]['/Temperature'] = value
 
-#Check 1 Wire Service and Set Connection
+    #Check 1 Wire Service Connection
     for item in dbusservice:
         logging.debug("Search for 1Wire Service Current Service: " + item)
         if dbusservice[item]['/Mgmt/Connection'] == '1Wire':
             logging.debug("Found 1 Wire Service Check connection")
-            if not os.path.exists('/sys/devices/w1_bus_master1/'+ item[7:]):
+            if not os.path.exists('/sys/devices/w1_bus_master1/'+ item[8:]):
                 if dbusservice[item]['/Connected'] != 0:
                     logging.info(item + " temperature interface disconnected")
                     dbusservice[item]['/Connected'] = 0
+                    dbusservice[item]['/Status'] = 1
+                    dbusservice[item]['/Temperature'] = None
             else:
                 if dbusservice[item]['/Connected'] != 1:
                     logging.info(item + " temperature interface connected")
                     dbusservice[item]['/Connected'] = 1
+                    dbusservice[item]['/Status'] = 0
     
 
 # =========================== Start of settings interface ================

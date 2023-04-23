@@ -41,9 +41,9 @@ if [ $scriptAction == 'INSTALL' ] ; then
 	
 	if [ $(grep -c "w1-gpio" "$configFile") == 0 ]; then
         logMessage "activating 1-Wire overlay"
-        echo "#### Change 1-Wire Temperatursensor on Pin4"  >> "$configFile"
-		echo "dtoverlay=w1-gpio,gpiopin=4" >> "$configFile"
-		echo "#### end change 1-Wire Pin4" >> "$configFile"
+        echo "#### Change 1-Wire Temperatursensor on Pin26"  >> "$configFile"
+		echo "dtoverlay=w1-gpio,gpiopin=26" >> "$configFile"
+		echo "#### end change 1-Wire Pin26" >> "$configFile"
         filesUpdated=true
     fi
 	
@@ -60,8 +60,8 @@ if [ $scriptAction == 'UNINSTALL' ] ; then
 	
 	# remove mods from configFile - do not use restore in case other mods were made manually
     if [ -f "$configFile" ]; then
-        if [ $(grep -c "#### Change 1-Wire Temperatursensor on Pin4" "$configFile") != 0 ]; then
-            sed -i -e '/#### Change 1-Wire Temperatursensor on Pin4/,/#### end change 1-Wire Pin4/d' "$configFile"
+        if [ $(grep -c "#### Change 1-Wire Temperatursensor on Pin26" "$configFile") != 0 ]; then
+            sed -i -e '/#### Change 1-Wire Temperatursensor on Pin26/,/#### end change 1-Wire Pin26/d' "$configFile"
             filesUpdated=true
         fi
     fi
