@@ -23,10 +23,8 @@ No Settings needed for 1 Wire (e.g. DS18B20) all you need is to install SetupHel
 </details>
 
 ### Enabled Features in this Setup:
-  - 1-Wire Support (Temperatures) Data Port GPIO 26 on RPi
-  Raspberry CPU temperature has been removed as it's not necessary for campers.
-  If you need CPU temperature install the Rikkert-RS version:
-  https://github.com/Rikkert-RS/VenusOS-TemperatureService
+  - 1-Wire Support (Temperatures) Data Port GPIO 26 on RPi. 
+  - Raspberry CPU temperature has been removed as it's not necessary for campers. If you need CPU temperature install the Rikkert-RS version: https://github.com/Rikkert-RS/VenusOS-TemperatureService
 
 ### Can be activated but not tested (in dbus-i2c.py)
   - i2c Sensors
