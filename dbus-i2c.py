@@ -132,20 +132,20 @@ def update_adc():
    
 
 #   update Pi CPU temperature 
-#def update_rpi():
-    #if not os.path.exists('/sys/devices/virtual/thermal/thermal_zone0/temp'):
-       # if dbusservice['cpu-temp']['/Connected'] != 0:
-      #      logging.info("cpu temperature interface disconnected")
-     #       dbusservice['cpu-temp']['/Connected'] = 0
-    #else:
-        #if dbusservice['cpu-temp']['/Connected'] != 1:
-        #    logging.info("cpu temperature interface connected")
-        #    dbusservice['cpu-temp']['/Connected'] = 1
-        #fd  = open('/sys/devices/virtual/thermal/thermal_zone0/temp','r')
-        #value = float(fd.read())
-        #value = round(value / 1000.0, 1)
-        #dbusservice['cpu-temp']['/Temperature'] = value 
-        #fd.close
+def update_rpi():
+    if not os.path.exists('/sys/devices/virtual/thermal/thermal_zone0/temp'):
+        if dbusservice['cpu-temp']['/Connected'] != 0:
+            logging.info("cpu temperature interface disconnected")
+            dbusservice['cpu-temp']['/Connected'] = 0
+    else:
+        if dbusservice['cpu-temp']['/Connected'] != 1:
+            logging.info("cpu temperature interface connected")
+            dbusservice['cpu-temp']['/Connected'] = 1
+        fd  = open('/sys/devices/virtual/thermal/thermal_zone0/temp','r')
+        value = float(fd.read())
+        value = round(value / 1000.0, 1)
+        dbusservice['cpu-temp']['/Temperature'] = value 
+        fd.close
 
 #update W1 temp
 def update_W1():
@@ -389,7 +389,7 @@ base = 'com.victronenergy'
 #dbusservice['adc-temp7']   ['/ProductName']     = 'Custard Pi-3 8x12bit adc'
 
 # Raspy CPU Temp
-dbusservice['cpu-temp'] = new_service(base, 'temperature', 'RPi_cpu', 'Raspberry Pi OS', SCount+1, 100, SCount+1)
+# (philip-s) dbusservice['cpu-temp'] = new_service(base, 'temperature', 'RPi_cpu', 'Raspberry Pi OS', SCount+1, 100, SCount+1)
 # Tidy up custom or missing items
 if os.path.exists('/sys/firmware/devicetree/base/model'):
     with open('/sys/firmware/devicetree/base/model', 'r') as f:
